@@ -7,8 +7,48 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
     stopifnot(length(z) == (dim(X)[1]))
     stopifnot(length(exact) == length(z))
     stopifnot(all((z == 1) | (z == 0)))
-    if (is.vector(X)) 
-        X <- matrix(X, length(X), 1)
+    if (is.vector(X)) X <- matrix(X, length(X), 1)
+   
+	if(is.data.frame(X)){
+		X.chars <- which(laply(X, class) == 'character')
+		if(length(X.chars) > 0){
+			warning('character variables found in X, converting to factors')
+			for(i in X.chars){
+				X[,i] <- factor(X[,i])
+				
+			}
+		}
+	    #if some variables are factors convert to dummies
+	     X.factors <- which(laply(X, class) == 'factor')
+	     
+   		#handle missing data
+   		for(i in which(laply(X, function(x) any(is.na(x))))){
+   			if(i %in% X.factors){
+   				#for factors, make NA a new factor level
+   				X[,i] <- addNA(X[,i])
+   			}else{
+   				#for numeric/logical, impute means and add a new indicator for missingness
+   				X[[paste(colnames(X)[i],'NA', sep = '')]] <- is.na(X[,i])
+   				X[which(is.na(X[,i])),i] <- mean(X[,i], na.rm = TRUE)
+   			}
+   		}
+		for(i in rev(X.factors)){
+	     	X <- cbind(X[,-i], model.matrix(as.formula(
+	     		paste('~',colnames(X)[i], '-1')),data=X))  
+	    }
+	      
+    }else{
+    	#handle missing data
+    	for(i in c(1:ncol(X))){
+    		if(any(is.na(X[,i]))){
+   				X <- cbind(X,is.na(X[,i]))
+   				colnames(X)[ncol(X)] <- paste(colnames(X)[i],'NA', sep = '')
+   				X[which(is.na(X[,i])),i] <- mean(X[,i], na.rm = TRUE)    
+    		}
+    	}
+			
+	}
+        
     if (calip.option == 'propensity') {
         calip.cov <- glm.fit(X, z, family = binomial())$fitted.values
         cal <- sd(calip.cov) * caliper

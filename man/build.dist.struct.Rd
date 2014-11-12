@@ -17,7 +17,7 @@ calip.cov = NULL, caliper = 0.2)
 a vector of treatment and control indicators, 1 for treatment and 0 for control.
 }
   \item{X}{
-a data frame containing covariate information for treated and control units.  Its row count must be equal to the length of \code{z}.  
+a data frame or a numeric or logical matrix containing covariate information for treated and control units.  Its row count must be equal to the length of \code{z}.  
 }
   \item{exact}{
  an optional vector of the same length as \code{z}.  If this argument is specified, treated units will only be allowed to match to control units that have equal values in the corresponding indices of the exact vector.  For example, to match patients within hospitals only, one could set exact equal to a vector of hospital IDs for each patient.
@@ -32,9 +32,9 @@ see \code{calip.option}.
 gives the size of the caliper when the user specifies the \code{calip.option} argument as 'propensity' or 'calip.cov'.
 }
 }
-%\details{
-%%  ~~ If necessary, more details than the description above ~~
-%}
+\details{
+	If \code{X} is a data frame and contains any character variables they are converted to factors with a warning.  If there are missing values in factor columns of \code{X}, they are treated as a new factor level.   If there are missing values in numeric or logical columns of \code{X}, an indicator of missingness for that column is added to \code{X} and the missing values are imputed with the column mean.  This follows the recommendations of Rosenbaum (\emph{Design of Observational Studies} section 9.4, 2010).
+}
 \value{
 A distance.structure object, the form of which is described in the documentation for the \code{distance.structure} argument of \code{rcbalance}.  Treated and control indices are numbered \code{1:nt} and \code{1:nc} respectively based on the order in which they appear in the \code{z} vector.
 }

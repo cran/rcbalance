@@ -9,8 +9,8 @@ This function computes an optimal match with refined covariate balance.
 }
 \usage{
 rcbalance(distance.structure, fb.list = NULL, 
-treated.info = NULL, control.info = NULL, k = 1, 
-penalty = 3)
+treated.info = NULL, control.info = NULL, target.group = NULL,
+ k = 1, penalty = 3)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -30,6 +30,12 @@ an optional data frame containing covariate information for the treated units in
   \item{control.info}{
 an optional data frame containing covariate information for the control units in the problem.  The row count of this data frame must be no smaller than the maximum control index in the \code{distance.structure} argument, and it is assumed that row \code{i} contains the covariate information for the control indexed by \code{i} in distance.structure.  In addition, the column count and column names must be identical to those of the \code{treated.info} argument.
 }
+
+  \item{target.group}{
+an optional data frame of observations with the desired covariate distribution for the selected control group,
+if it differs from the covariate distribution of the treated units.  This argument will be ignored unless \code{fb.list}, \code{treated.info} and \code{control.info} are also specified, and it must have the same dimensions as \code{treated.info}.
+}
+
   \item{k}{
 a nonnegative integer. The number of control units to which each treated unit will be matched.
 }

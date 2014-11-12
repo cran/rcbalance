@@ -1,5 +1,5 @@
 rcbalance <-
-function(distance.structure, fb.list = NULL, treated.info = NULL, control.info = NULL,  k = 1, penalty = 3){
+function(distance.structure, fb.list = NULL, treated.info = NULL, control.info = NULL, target.group = NULL,  k = 1, penalty = 3){
 	#set up treated-control portion of network
 	
 	if(class(distance.structure) %in% c('matrix', 'InfinitySparseMatrix', 'BlockedInfinitySparseMatrix')){
@@ -18,8 +18,16 @@ function(distance.structure, fb.list = NULL, treated.info = NULL, control.info =
 		stopifnot(all(colnames(treated.info) == colnames(control.info)))
 		#make sure all variables named in fb.list have corresponding columns in the info matrices
 		stopifnot(all(unlist(fb.list) %in% colnames(treated.info)))
-
-		all.subj.info <- rbind(treated.info, control.info)
+		
+		
+		if(is.null(target.group)){
+			#unless otherwise specified, target group for fine balance is the treated group
+			target.group <- treated.info
+		}else{
+			#for now, target.group must be specified via a data frame with the same dimensions as the treated group 
+			stopifnot(all(dim(treated.info) == dim(target.group)))
+		}
+		all.subj.info <- rbind(target.group, control.info)
 
 		if(class(distance.structure) %in% c('matrix', 'InfinitySparseMatrix', 'BlockedInfinitySparseMatrix')){		
 #		if(inherits(distance.structure,'matrix')){
@@ -36,7 +44,6 @@ function(distance.structure, fb.list = NULL, treated.info = NULL, control.info =
 		if(length(fb.list) > 1){
 			for(i in c(1:(length(fb.list)-1)))	stopifnot(all(fb.list[[i]] %in% fb.list[[i+1]]))	
 		}
-		#ensure 
 	
 
 		for(my.layer in fb.list){

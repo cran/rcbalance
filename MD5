@@ -1,11 +1,11 @@
-e3b50ec5ae8cdb06be241403e98d6663 *DESCRIPTION
+0c1a8a2571ab2bb4e42c5faf4d5336f5 *DESCRIPTION
 2ec44328c732da9201f16f5a683e3fb3 *LICENSE
 9ebe2df4bdb2cdd247b6afc5139734fa *NAMESPACE
-034de3737aaa3ec60a9388bf69679dcc *R/build.dist.struct.R
+e5a99cff4bf0cd6d3327ed407fecfcfe *R/build.dist.struct.R
 468d013df2238615f81051d87406d4ed *R/rcbalance-internal.R
-a146bc025f0e0fe813b6d94450693c38 *R/rcbalance.R
-fecea062c084b36f4f3d20a7cec97932 *man/build.dist.struct.Rd
+82302acf73405a191f9818d07985af65 *R/rcbalance.R
+e9f0b12fc0dfa4a9ae4a40e59b18bd24 *man/build.dist.struct.Rd
 b4202257980bbdb6bad91b0ae7c8c330 *man/callrelax.Rd
 41e8ef35ebdcf0173f0f83462d8af4f2 *man/dist2net.Rd
-154b2d8b5f537dc962fe18bf64c8cd2d *man/rcbalance-package.Rd
-69a73fb1c260ba134ebfe5ce090ecd44 *man/rcbalance.Rd
+1b377577b69b58d345edf7eea1f407cb *man/rcbalance-package.Rd
+665cb0176dae5b5276e5eb2bfa6e32e6 *man/rcbalance.Rd

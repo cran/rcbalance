@@ -10,9 +10,9 @@ This package computes sparse matches that are optimal under a set of refined cov
 \tabular{ll}{
 Package: \tab rcbalance\cr
 Type: \tab Package\cr
-Version: \tab 1.0\cr
-Date: \tab 2014-07-10\cr
-License: \tab What license is it under?\cr
+Version: \tab 1.2\cr
+Date: \tab 2014-11-11\cr
+License: \tab MIT + file LICENSE\cr
 }
 The main function is \code{rcbalance}, which takes a distance/sparsity object containing information about matchability of the treated and control units and a list of fine balance variables and produces a match.  The \code{build.dist.struct} function can be used to construct the distance/sparsity object from covariate information.  The other functions are largely for internal use and should not be needed by the large majority of users.
 
