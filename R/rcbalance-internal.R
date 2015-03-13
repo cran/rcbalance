@@ -1,5 +1,5 @@
 
-dist2net.matrix <- function(dist.struct, k){
+dist2net.matrix <- function(dist.struct, k, exclude.treated = FALSE){
 	ntreat <- nrow(dist.struct)
 	ncontrol <- ncol(dist.struct)
 		
@@ -31,19 +31,12 @@ dist2net.matrix <- function(dist.struct, k){
     }
     b <- z*k #give each treated unit a supply of k
     tcarcs <- length(startn)
-
-
-	#build exact/near fine balance tree
 	
 	#set up penalty vector
 	
 	p <- max(cost)
 	theta <- 2
-	if(ncol(fb.structure) == 1){
-		S.i <- NULL
-	}else{
-		S.i  <- rev(theta^c(1:(ncol(fb.structure) - 1))*p)
-	}
+	S.i <- NULL
 	layers <- list()	
 	b <- c(b, -sum(k*z))
 	layers[[1]] <- data.frame('input' = length(b), 'out' = NA, 'bypass' = NA)
@@ -66,6 +59,27 @@ dist2net.matrix <- function(dist.struct, k){
 	ucap <- c(ucap, rep(1, length(ctrl.idx)))
 	cost <- c(cost, rep(0, length(ctrl.idx)))
 	
+	#if we are excluding treated units, add bypass edges from treated units to lowest level of fine balance	
+	if(exclude.treated){
+		treat.idx <- which(z==1)
+		#look up indices of lowest-level nodes for treated
+		ll.categories <- fb.structure[treat.idx,low.layer]
+		#look up indices of lowest-layer nodes
+		ll.nodes <- layers[[low.layer]]$input[match(ll.categories, rownames(layers[[low.layer]]))]
+		
+		#add edges
+		startn <- c(startn, treat.idx)
+		endn <- c(endn, ll.nodes)
+		ucap <- c(ucap, rep(1, length(treat.idx)))
+
+		#set bypass cost to some of ntreat largest t-c distances
+		ntreat.largest <- sum(sort(cost, decreasing = TRUE)[1:ntreat])
+		cost <- c(cost, rep(ntreat.largest, length(treat.idx)))
+	}
+	
+	
+	
+	
 	net.layers <- list(startn = startn, endn = endn, ucap = ucap, b = b, 
         cost = cost, tcarcs = tcarcs, layers = layers, z = z, fb.structure = fb.structure, penalties = S.i, theta = theta, p = p)
 	net.layers
@@ -75,7 +89,7 @@ dist2net.matrix <- function(dist.struct, k){
 
 
 dist2net <-
-function(dist.struct, k){
+function(dist.struct, k, exclude.treated = FALSE){
 	ntreat <- length(dist.struct)
 	ncontrol <- max(laply(dist.struct, function(x) max(c(as.numeric(names(x)),0))))
 		
@@ -107,18 +121,12 @@ function(dist.struct, k){
     b <- z*k #give each treated unit a supply of k
     tcarcs <- length(startn)
 
-
-	#build exact/near fine balance tree
-	
 	#set up penalty vector
 	
 	p <- max(cost)
 	theta <- 2
-	if(ncol(fb.structure) == 1){
-		S.i <- NULL
-	}else{
-		S.i  <- rev(theta^c(1:(ncol(fb.structure) - 1))*p)
-	}
+	S.i <- NULL
+
 	layers <- list()	
 	b <- c(b, -sum(k*z))
 	layers[[1]] <- data.frame('input' = length(b), 'out' = NA, 'bypass' = NA)
@@ -140,6 +148,23 @@ function(dist.struct, k){
 	endn <- c(endn, parent.nodes)
 	ucap <- c(ucap, rep(1, length(ctrl.idx)))
 	cost <- c(cost, rep(0, length(ctrl.idx)))
+
+	#if we are excluding treated units, add bypass edges from treated units to lowest level of fine balance	
+	if(exclude.treated){
+		treat.idx <- which(z==1)
+		#look up indices of lowest-level nodes for treated
+		ll.categories <- fb.structure[treat.idx,low.layer]
+		#look up indices of lowest-layer nodes
+		ll.nodes <- layers[[low.layer]]$input[match(ll.categories, rownames(layers[[low.layer]]))]
+		
+		#add edges
+		startn <- c(startn, treat.idx)
+		endn <- c(endn, ll.nodes)
+		ucap <- c(ucap, rep(1, length(treat.idx)))
+		#set bypass cost to some of ntreat largest t-c distances
+		ntreat.largest <- sum(sort(cost, decreasing = TRUE)[1:ntreat])
+		cost <- c(cost, rep(ntreat.largest, length(treat.idx)))
+	}
 	
 	net.layers <- list(startn = startn, endn = endn, ucap = ucap, b = b, 
         cost = cost, tcarcs = tcarcs, layers = layers, z = z, fb.structure = fb.structure, penalties = S.i, theta = theta, p = p)
@@ -204,6 +229,7 @@ function(net.layers, new.layer){
 	
 	
 	#update penalty vector S.i
+	#also update bypass penalties if we have them
 	if(length(S.i) == 0){
 		S.i <- my.p*theta
 	}else{
@@ -213,7 +239,13 @@ function(net.layers, new.layer){
 			cost[cost == S.i[j]] <- S.i[j-1] #step up penalty to higher level
 		}		
 	}
-	#a line updating all penalties in cost equal to S.i[i] (after adding one at first index) or higher with their stepped-up versions
+	#check if there are bypass edges from treated layer; if so update their penalties too
+	if(any(startn[-c(1:tcarcs)] %in% which(z ==1)) && length(S.i) > 0){
+		bypass.edges <- startn %in% which(z == 1)
+		bypass.edges[1:tcarcs] <- FALSE
+		new.byp.pen <- theta*max(S.i)
+		cost[which(bypass.edges)] <- new.byp.pen
+	}
 	
 	#find parent nodes for nodes in current layer
 	ztab <- table(fb.structure[,i], z) 
@@ -239,6 +271,9 @@ function(net.layers, new.layer){
 	
 	#detach the parent node layer from its former child 
 	drop.edges <- which(endn %in% parent.nodes)
+	#check if we are using bypass edges from treated layer so we can add them back in later
+	exclude.treated <- any(which(z==1) %in% startn[drop.edges])
+	
 	if(length(drop.edges) > 0){
 		startn <- startn[-drop.edges]
 		endn <- endn[-drop.edges]
@@ -290,7 +325,31 @@ function(net.layers, new.layer){
 		startn <- c(startn, ctrl.idx)
 		endn <- c(endn, parent.nodes)
 		ucap <- c(ucap, rep(1, length(ctrl.idx)))
-		cost <- c(cost, rep(0, length(ctrl.idx)))				
+		cost <- c(cost, rep(0, length(ctrl.idx)))
+		
+		
+		#Add bypass edges from treated to lowest fine balance layer
+		if(exclude.treated){
+				treat.idx <- which(z==1)
+				#look up indices of lowest-level nodes for treated
+				ll.categories <- fb.structure[treat.idx,low.layer]
+				#look up indices of lowest-layer nodes
+				ll.nodes <- layers[[low.layer]]$input[match(ll.categories, rownames(layers[[low.layer]]))]
+		
+				#add edges
+				startn <- c(startn, treat.idx)
+				endn <- c(endn, ll.nodes)
+				ucap <- c(ucap, rep(1, length(treat.idx)))
+				#EDIT
+				#set bypass cost to max t-c distance plus one
+				if(length(S.i) > 0){
+					new.byp.pen <- theta*max(S.i)
+				}else{
+					new.byp.pen <- sum(sort(cost, decreasing = TRUE)[1:sum(z)])
+				}
+				cost <- c(cost, rep(new.byp.pen, length(treat.idx)))
+		}
+						
 	}else{
 		i <- i + 1 #now i indexes child layer
 		
@@ -324,133 +383,7 @@ function(net.layers, new.layer){
 }
 
 
-remove.layer <-
-function(net.layers, layer.idx){
-	
-	#net.layers is a layered network object
-	startn <- net.layers$startn
-	endn <- net.layers$endn
-	ucap <- net.layers$ucap
-	b <- net.layers$b
-	cost <- net.layers$cost
-	tcarcs <- net.layers$tcarcs
-	layers <- net.layers$layers
-	z <- net.layers$z
-	fb.structure <- net.layers$fb.structure
-	S.i <- net.layers$penalties
-	my.p <- net.layers$p
-	theta.local <- net.layers$theta
-
- 	#figure out from previous network structure what control ratio is
-	k <- b[min(which(z == 1))]
-
-	n.levels <- ncol(fb.structure)
-	#not allowed to remove root layer or layers not in matrix
-	stopifnot(layer.idx > 1 && layer.idx <= n.levels)
-	
-	is.lowest <- FALSE
-	if(layer.idx == n.levels) is.lowest <- TRUE
-
-	#since layers are always added at once, all the nodes in a layer will be contiguous
-	to.delete <- layers[[layer.idx]]
-	threshold <- min(to.delete) - 1
-	n.delete <-  max(to.delete) - threshold
-
-
-	#remove layer from fb.structure and layers 
-	fb.structure <- fb.structure[,-layer.idx, drop = FALSE]
-	n.levels <- ncol(fb.structure)
-	colnames(fb.structure) <- paste('f' ,c(1:n.levels), sep = '.')
-	layers <- layers[-layer.idx]
-
-	for(j in c(1:length(S.i))){
-		if(j >= layer.idx) break #only need to update penalties in levels above deleted one
-		cost[cost == S.i[j]] <- S.i[j+1] #reassign all penalties in cost to one step lower in penalty
-	}
-	S.i <- S.i[-1]	#remove maximum penalty in S.i
-	
-	
-	#delete nodes from network
-
-	if(length(b) > threshold + n.delete){
-		b <- c(b[1:threshold],b[(threshold + n.delete + 1):length(b)])	
-
-	}else{
-		b <- b[1:threshold]
-	}
-
-	#delete edges that connected to these nodes
-	out.edges <- startn %in% unlist(to.delete)
-	in.edges <- endn %in% unlist(to.delete)
-	edge.delete <- which(out.edges | in.edges)
-	startn <- startn[-edge.delete]
-	endn <- endn[-edge.delete]
-	ucap <- ucap[-edge.delete]
-	cost <- cost[-edge.delete]
-	
-	#change node indices to reflect decrease in total number of nodes
-	startn <- startn - (startn > threshold)*n.delete
-	endn <- endn - (endn > threshold)*n.delete
-	
-	#listwise operation on layers to fix node indices
-	fix.indices <- function(layer){
-		layer <- layer - (layer > threshold)*n.delete
-		return(layer)
-	}
-	layers <- llply(layers, fix.indices)
-	
-	#reattach layers above and below the one deleted
-	if(is.lowest){
-		#connect new lowest layer to controls
-		#find control nodes 
-		ctrl.idx <- which(z == 0) #since T and C are first created, Cs should be these nodes
-
-		#connect controls to lowest layer of fine balance treated
-		low.layer <- ncol(fb.structure)
-		parent.categories <- fb.structure[ctrl.idx,low.layer]
-		#look up indices of parent nodes
-		parent.nodes <- layers[[low.layer]]$input[match(parent.categories, rownames(layers[[low.layer]]))]
-		
-		#add edges between controls and fine balance nodes
-		startn <- c(startn, ctrl.idx)
-		endn <- c(endn, parent.nodes)
-		ucap <- c(ucap, rep(1, length(ctrl.idx)))
-		cost <- c(cost, rep(0, length(ctrl.idx)))		
-	}else{
-		i <- layer.idx #new layer at layer.idx is the old child
-		
-		ztab <- table(fb.structure[,i], z) 
-		zerobins <- which(apply(ztab, 1,function(x)all(x == 0))) 
-		if(length(zerobins) > 0){	
-			ztab <- ztab[-zerobins,]
-		}
-		nnodes <- nrow(ztab)
-		node.nums <- layers[[i]]$out
-		
-		nest.tab <- table(fb.structure[,i-1], fb.structure[,i])
-		parent.categories <- apply(nest.tab, 2, function(x) rownames(nest.tab)[which (x > 0)] )
-		pc.found <- sapply(parent.categories, length)
-		zerobins <- which(pc.found == 0)
-		if(length(zerobins) > 0){			
-			parent.categories <- parent.categories[-zerobins]
-		}
-		node.lookup <- match(parent.categories, rownames(layers[[i-1]]))
-		parent.nodes <- layers[[i-1]]$input[node.lookup]
-	
-		#now add in new edges connecting new layer to parent
-		startn <- c(startn, node.nums)
-		endn <- c(endn, parent.nodes)
-		ucap <- c(ucap,rep(sum(k*z),nnodes))
-		cost <- c(cost, rep(0,nnodes))
-			
-	}
-	net.layers <- list(startn = startn, endn = endn, ucap = ucap, b = b, 
-        cost = cost, tcarcs = tcarcs, layers = layers, z = z, fb.structure = fb.structure, penalties = S.i, theta = theta.local, p = my.p)
-	net.layers
-}
-
-
-  callrelax <- function (net) {
+callrelax <- function (net) {
 		if(unlist(net)[1] == "test") return("Loaded!")
     	startn <- net$startn
     	endn <- net$endn
@@ -487,12 +420,10 @@ function(net.layers, layer.idx){
     	list(crash = crash, feasible = feasible, x = x)
 }
 
-#callrelax_internal <- function(){}
-
 penalty.update <-
 function(net.layers, newtheta, newp = NA){
 	oldpen <- net.layers$penalties
-	stopifnot(length(oldpen) > 0)
+	if(length(oldpen)== 0) return(net.layers)
 	if(is.na(newp)) newp <- net.layers$p #rev(oldpen)[1]/net.layers$theta #if p is not supplied set it to old value of p
 	newpen <- newtheta^c(length(oldpen):1)*newp
 	oldcost <- net.layers$cost
@@ -500,6 +431,13 @@ function(net.layers, newtheta, newp = NA){
 	for(i in c(1:length(oldpen))){
 		newcost[which(oldcost == round(oldpen[i]))] <- newpen[i]
 	}
+	#check if there are bypass edges from treated layer; if so update their penalties too
+	if(any(net.layers$startn[-c(1:net.layers$tcarcs)] %in% which(net.layers$z ==1))){
+		bypass.edges <- net.layers$startn %in% which(net.layers$z == 1)
+		bypass.edges[1:net.layers$tcarcs] <- FALSE
+		new.byp.pen <- newtheta*max(newpen)
+		newcost[which(bypass.edges)] <- new.byp.pen
+	}	
 	net.layers$cost <- round(newcost)
 	net.layers$penalties <- newpen
 	net.layers$theta <- newtheta

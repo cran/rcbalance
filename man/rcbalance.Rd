@@ -9,7 +9,7 @@ This function computes an optimal match with refined covariate balance.
 }
 \usage{
 rcbalance(distance.structure, fb.list = NULL, 
-treated.info = NULL, control.info = NULL, target.group = NULL,
+treated.info = NULL, control.info = NULL, exclude.treated = FALSE, target.group = NULL,
  k = 1, penalty = 3)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -29,6 +29,10 @@ an optional data frame containing covariate information for the treated units in
 }
   \item{control.info}{
 an optional data frame containing covariate information for the control units in the problem.  The row count of this data frame must be no smaller than the maximum control index in the \code{distance.structure} argument, and it is assumed that row \code{i} contains the covariate information for the control indexed by \code{i} in distance.structure.  In addition, the column count and column names must be identical to those of the \code{treated.info} argument.
+}
+
+\item{exclude.treated}{
+	if \code{TRUE}, then when there is no feasible match using all treated units, a minimal number of treated units will be dropped so that a match can be formed.  The excluded treated units will be selected optimally so that the cost of the matching is reduced as much as possible.  NOTE: \code{exclude.treated} = \code{TRUE} is incompatible with arguments to \code{target.group} and with values of \code{k} larger than 1. 
 }
 
   \item{target.group}{

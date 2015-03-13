@@ -11,13 +11,11 @@ Building and Manipulating Network Flow Problems
 \description{
 These are internal rcbalance methods not meant to be called directly by users.  They are used to construct a network flow problem from the information about a matching problem that is passed to the \code{rcbalance} method.}
 \usage{
-dist2net(dist.struct, k)
+dist2net(dist.struct, k, exclude.treated = FALSE)
 
-dist2net.matrix(dist.struct, k)
+dist2net.matrix(dist.struct, k, exclude.treated = FALSE)
 
 add.layer(net.layers, new.layer)
-
-remove.layer(net.layers, layer.idx)
 
 penalty.update(net.layers, newtheta, newp = NA)
 }
@@ -29,14 +27,17 @@ penalty.update(net.layers, newtheta, newp = NA)
   \item{k}{
 a nonnegative integer. The number of control units to which each treated unit will be matched.
 }
+
+\item{exclude.treated}{
+	if \code{TRUE}, then when there is no feasible match using all treated units, a minimal number of treated units may be dropped so that a match can be formed.  Specifying this argument adds penalized edges to the network so that such a match can be computed. NOTE: this argument is incompatible with values of \code{k} greater than 1.
+}
+
   \item{net.layers}{
 	a layered network object of the type produced by the dist2net function.  
 }
   \item{new.layer}{
 	a vector equal in length to the number of treated and control units in the matching problem.  Each coordinate contains the value of a new fine balance variable for the corresponding unit.
 }
-
-\item{layer.idx}{number of the layer to be removed from the network.  Layers are numbered from coarsest to finest.}
 
 \item{newtheta}{optional argument giving a new value for the theta field of the net.layers object (see value section for description of this field).}
 
@@ -46,7 +47,7 @@ a nonnegative integer. The number of control units to which each treated unit wi
 
 
 \details{
-\code{dist2net} and \code{dist2net.matrix} take the distance structure given to \code{rcbalance} encoding information about the matching problem and converts it into a network flow problem.  \code{add.layer} adds network structure to handle an individual fine balance variable (it can be called iteratively to add many such variables) and \code{remove.layer} removes these layers.  \code{penalty.update} is used to change the penalties for each layer. See the references for a detailed description of how the matching problem is transformed into a network.
+\code{dist2net} and \code{dist2net.matrix} take the distance structure given to \code{rcbalance} encoding information about the matching problem and converts it into a network flow problem.  \code{add.layer} adds network structure to handle an individual fine balance variable (it can be called iteratively to add many such variables).  \code{penalty.update} is used to change the penalties for each layer (and the penalties for edges used to exclude treated units if they are present). See the references for a detailed description of how the matching problem is transformed into a network.
 }
 \value{
 A layered network object, formatted as a list with the following arguments (where narcs is the number of arcs and nnodes is the number of nodes in the network):
