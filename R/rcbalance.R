@@ -93,7 +93,9 @@ function(distance.structure, fb.list = NULL, treated.info = NULL, control.info =
 	x <- o$x[1:match.network$tcarcs]	
 	match.df <- data.frame('treat' = as.factor(match.network$startn[1:match.network$tcarcs]), 'x' = x, 'control' = match.network$endn[1:match.network$tcarcs])
 	matched.or.not <- daply(match.df, .(match.df$treat), function(treat.edges) c(treat.edges$treat[1], sum(treat.edges$x)))
-	match.df <- match.df[-which(match.df$treat %in% matched.or.not[which(matched.or.not[,2] == 0),1]),]
+	if(any(matched.or.not[,2] == 0)){
+		match.df <- match.df[-which(match.df$treat %in% matched.or.not[which(matched.or.not[,2] == 0),1]),]
+	}
 	match.df$treat <- as.factor(as.character(match.df$treat))
 	matches <- daply(match.df, .(match.df$treat), function(treat.edges) treat.edges$control[treat.edges$x == 1])
 
