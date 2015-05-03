@@ -72,7 +72,7 @@ dist2net.matrix <- function(dist.struct, k, exclude.treated = FALSE){
 		endn <- c(endn, ll.nodes)
 		ucap <- c(ucap, rep(1, length(treat.idx)))
 
-		#set bypass cost to some of ntreat largest t-c distances
+		#set bypass cost to sum of ntreat largest t-c distances
 		ntreat.largest <- sum(sort(cost, decreasing = TRUE)[1:ntreat])
 		cost <- c(cost, rep(ntreat.largest, length(treat.idx)))
 	}
@@ -444,7 +444,30 @@ function(net.layers, newtheta, newp = NA){
 	return(net.layers)
 }
 
-
+penalize.near.exact <- function(net.layers, near.exact){
+	oldcost <- net.layers$cost
+	startn <- net.layers$startn
+	endn <- net.layers$endn
+	tcarcs <- net.layers$tcarcs
+	theta <- net.layers$theta
+	z <- net.layers$z
+	
+	newcost <- oldcost
+	if(any(startn[-c(1:tcarcs)] %in% which(z ==1))){	
+		bypass.edges <- startn %in% which(z == 1)
+		bypass.edges[1:tcarcs] <- FALSE
+		old.byp.pen <- oldcost[which(bypass.edges)[1]]
+		newcost[which(bypass.edges)] <- old.byp.pen*theta
+		near.exact.pen <- old.byp.pen
+	}else{
+		near.exact.pen <- theta*max(net.layers$penalties,0)
+		#correct penalty if net.layers$penalties was empty
+		if(near.exact.pen == 0) near.exact.pen <- theta*net.layers$p
+	}
+	newcost[which(near.exact[startn] != near.exact[endn])] <- newcost[which(near.exact[startn] != near.exact[endn])] + near.exact.pen
+	net.layers$cost <- newcost
+	return(net.layers)
+}
 
 .Random.seed <-
 c(403L, 11L, -1638544231L, 1706315048L, -1076233258L, -1306066863L, 

@@ -1,52 +1,60 @@
 rcbalance <-
-function(distance.structure, fb.list = NULL, treated.info = NULL, control.info = NULL, exclude.treated = FALSE, target.group = NULL,  k = 1, penalty = 3){
-	#set up treated-control portion of network
-	
+function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = NULL, control.info = NULL, exclude.treated = FALSE, target.group = NULL,  k = 1, penalty = 3){
+		
+####################  CHECK INPUT #################### 
+	stopifnot(k > 0) 
+	stopifnot(penalty > 1)
+	#exclude.treated is incompatible with k > 1 and with target distributions other than default treated distribution
+	stopifnot(!(exclude.treated && (!is.null(target.group) || k > 1))) 
 
-	####### FINE BALANCE SETUP ######
-	if(!is.null(fb.list)){
-
-		#sanitize input
-		stopifnot(k > 0)
-		stopifnot(penalty > 1)
+	if(!is.null(near.exact)){
 		stopifnot(!is.null(treated.info) && !is.null(control.info))
 		stopifnot(ncol(treated.info) == ncol(control.info))
-		stopifnot(all(colnames(treated.info) == colnames(control.info)))
-		#make sure all variables named in fb.list have corresponding columns in the info matrices
-		stopifnot(all(unlist(fb.list) %in% colnames(treated.info)))
-		
-		#exclude.treated is incompatible with k > 1 and with target distributions other than default treated distribution
-		stopifnot(!(exclude.treated && (!is.null(target.group) || k > 1)))
-		
-		if(is.null(target.group)){
-			#unless otherwise specified, target group for fine balance is the treated group
-			target.group <- treated.info
-		}else{
-			#for now, target.group must be specified via a data frame with the same dimensions as the treated group 
-			stopifnot(all(dim(treated.info) == dim(target.group)))
-		}
-		all.subj.info <- rbind(target.group, control.info)
-
+		stopifnot(all(colnames(treated.info) == colnames(control.info)))	
+		treated.control.info <- rbind(treated.info, control.info)
 		if(class(distance.structure) %in% c('matrix', 'InfinitySparseMatrix', 'BlockedInfinitySparseMatrix')){		
-#		if(inherits(distance.structure,'matrix')){
 			stopifnot(nrow(treated.info) == nrow(distance.structure))
 			stopifnot(nrow(control.info) == ncol(distance.structure))
 		}else{
 			#make sure number of treated in distance.structure and treated.info agree
 			stopifnot(nrow(treated.info) == length(distance.structure))
 			#make sure number of controls in distance.structure and control.info agree, i.e. max control index in each list element must not exceed row count in matrix of all subjects
-			stopifnot(nrow(all.subj.info) >= max(laply(distance.structure, function(x) max(c(as.numeric(names(x)),0)))))		
-		}
-		
-		#check if fb.list nests correctly
-		if(length(fb.list) > 1){
-			for(i in c(1:(length(fb.list)-1)))	stopifnot(all(fb.list[[i]] %in% fb.list[[i+1]]))	
-		}
+			stopifnot(nrow(treated.control.info) >= max(laply(distance.structure, function(x) max(c(as.numeric(names(x)),0)))))		
+		}	
+		stopifnot(all(near.exact %in% colnames(treated.info)))
 	}
 	
+	if(!is.null(fb.list)){
+		if(is.null(target.group) && !is.null(near.exact)){
+			#don't need to repeat checks 
+			target.group <- treated.info
+			target.control.info <- treated.control.info
+		 }else{ 
+		 	if(is.null(target.group)){
+		 		target.group <- treated.info
+		 	}
+		 	stopifnot(!is.null(target.group) && !is.null(control.info))
+			stopifnot(ncol(target.group) == ncol(control.info))
+			stopifnot(all(colnames(target.group) == colnames(control.info)))
+			target.control.info <- rbind(target.group, control.info)
+			if(class(distance.structure) %in% c('matrix', 'InfinitySparseMatrix', 'BlockedInfinitySparseMatrix')){		
+				stopifnot(nrow(target.group) == nrow(distance.structure))
+				stopifnot(nrow(control.info) == ncol(distance.structure))
+			}else{
+				#make sure number of treated in distance.structure and target.group agree
+				stopifnot(nrow(target.group) == length(distance.structure))
+				#make sure number of controls in distance.structure and control.info agree, i.e. max control index in each list element must not exceed row count in matrix of all subjects
+				stopifnot(nrow(target.control.info) >= max(laply(distance.structure, function(x) max(c(as.numeric(names(x)),0)))))		
+			}
+			stopifnot(all(unlist(fb.list) %in% colnames(target.group))) 
+			if(length(fb.list) > 1){
+				for(i in c(1:(length(fb.list)-1)))	stopifnot(all(fb.list[[i]] %in% fb.list[[i+1]]))	
+			}				
+		}	
+	}
 
-	##### RUN MATCH #####
-	
+
+######## SET UP TREATED-CONTROL PORTION OF NETWORK	#########
 		if(class(distance.structure) %in% c('matrix', 'InfinitySparseMatrix', 'BlockedInfinitySparseMatrix')){
 #	if(inherits(distance.structure, 'matrix')){
 		match.network <- dist2net.matrix(distance.structure,k, exclude.treated = exclude.treated)
@@ -54,19 +62,26 @@ function(distance.structure, fb.list = NULL, treated.info = NULL, control.info =
 		match.network <- dist2net(distance.structure,k, exclude.treated = exclude.treated)
 	}
 	
-	#add fine balance layers if they are provided
+####################  ADD FINE BALANCE CONSTRAINTS #################### 
+
 	if(!is.null(fb.list)){
 		for(my.layer in fb.list){
-				interact.factor <- apply(all.subj.info[,match(my.layer, colnames(all.subj.info)), drop = FALSE],1, function(x) paste(x, collapse ='.'))
+				interact.factor <- apply(target.control.info[,match(my.layer, colnames(target.control.info)), drop = FALSE],1, function(x) paste(x, collapse ='.'))
 				match.network <- add.layer(match.network, interact.factor)
 		}		
 	}
 		
-	match.network <- penalty.update(match.network, newtheta = penalty) 	
+	match.network <- penalty.update(match.network, newtheta = penalty) 
+
+#################### ADD NEAR EXACT PENALTIES ######################
+	
+	if(!is.null(near.exact)){
+		interact.factor <- apply(treated.control.info[,match(near.exact, colnames(treated.control.info)), drop = FALSE],1, function(x) paste(x, collapse ='.'))
+		match.network <- penalize.near.exact(match.network, interact.factor)	
+	}
 
 
-	#EDIT: put things in error message to suggest excluding treated if exclude.treated = FALSE?
-
+############################ RUN MATCH ##############################
 	if(any(is.na(as.integer(match.network$cost)))){
 		print('Integer overflow in penalty vector!  Run with a lower penalty value or fewer levels of fine balance.')
 		stop()
@@ -87,8 +102,7 @@ function(distance.structure, fb.list = NULL, treated.info = NULL, control.info =
 	}
 	
 	
-	##### PREPARE OUTPUT #####
-	
+	#################### PREPARE OUTPUT #################### 	
 	#make a |T| x k matrix with rownames equal to index of treated unit and indices of its matched controls stored in each row
 	x <- o$x[1:match.network$tcarcs]	
 	match.df <- data.frame('treat' = as.factor(match.network$startn[1:match.network$tcarcs]), 'x' = x, 'control' = match.network$endn[1:match.network$tcarcs])

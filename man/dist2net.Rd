@@ -4,6 +4,7 @@
 \alias{add.layer}
 \alias{remove.layer}
 \alias{penalty.update}
+\alias{penalize.near.exact}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Building and Manipulating Network Flow Problems
@@ -18,6 +19,8 @@ dist2net.matrix(dist.struct, k, exclude.treated = FALSE)
 add.layer(net.layers, new.layer)
 
 penalty.update(net.layers, newtheta, newp = NA)
+
+penalize.near.exact(net.layers, near.exact)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -43,11 +46,12 @@ a nonnegative integer. The number of control units to which each treated unit wi
 
 \item{newp}{optional argument giving a new value for the p field of the net.layers object (see value section for description of this field).}
 
+\item{near.exact}{a vector equal in length to the number of treated and control units in the matching problem.  Edges between units with different values of this variable will be penalized.}
 }
 
 
 \details{
-\code{dist2net} and \code{dist2net.matrix} take the distance structure given to \code{rcbalance} encoding information about the matching problem and converts it into a network flow problem.  \code{add.layer} adds network structure to handle an individual fine balance variable (it can be called iteratively to add many such variables).  \code{penalty.update} is used to change the penalties for each layer (and the penalties for edges used to exclude treated units if they are present). See the references for a detailed description of how the matching problem is transformed into a network.
+\code{dist2net} and \code{dist2net.matrix} take the distance structure given to \code{rcbalance} encoding information about the matching problem and converts it into a network flow problem.  \code{add.layer} adds network structure to handle an individual fine balance variable (it can be called iteratively to add many such variables).  \code{penalty.update} is used to change the penalties for each layer (and the penalties for edges used to exclude treated units if they are present) and \code{penalize.near.exact} is used to add penalties to the treated-control edges to allow near-exact matching. See the references for a detailed description of how the matching problem is transformed into a network.
 }
 \value{
 A layered network object, formatted as a list with the following arguments (where narcs is the number of arcs and nnodes is the number of nodes in the network):

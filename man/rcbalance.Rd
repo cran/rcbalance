@@ -8,7 +8,7 @@ Optimal Matching with Refined Covariate Balance
 This function computes an optimal match with refined covariate balance.
 }
 \usage{
-rcbalance(distance.structure, fb.list = NULL, 
+rcbalance(distance.structure, near.exact = NULL, fb.list = NULL, 
 treated.info = NULL, control.info = NULL, exclude.treated = FALSE, target.group = NULL,
  k = 1, penalty = 3)
 }
@@ -21,11 +21,15 @@ treated.info = NULL, control.info = NULL, exclude.treated = FALSE, target.group 
  
  Note that non-integer distances in \code{distance.structure} will be rounded to the nearest integer, so users may wish to multiply their distance by a factor of 100 or 1000 to preserve fine distinctions.
 }
+
+\item{near.exact}{ 
+an optional character vector specifying names of covariates for near-exact matching.  This argument takes precedence over any refined covariate balance constraints, so the match will produce the best refined covariate balance subject to matching exactly on this variable wherever possible.  If multiple covariates are named, near-exact matching will be done on their interaction.
+}
   \item{fb.list}{
 an optional list of character vectors specifying covariates to be used for refined balance.  Each element of the list corresponds to a level of refined covariate balance, and the levels are assumed to be in decreasing order of priority.  Each character vector should contain one or more names of categorical covariates on which the user would like to enforce near fine balance.  If multiple covariates are specified, an interaction is created between the categories of the covariates and near fine balance is enforced on the interaction.  IMPORTANT: covariates or interactions coming later in the list must be nested within covariates coming earlier in the list; if this is not the case the function will stop with an error.  An easy way to ensure that this occurs is to include in each character vector all the variables named in earlier list elements.  If the \code{fb.list} argument is specified, the \code{treated.info} and \code{control.info} arguments must also be specified.
 }
   \item{treated.info}{
-an optional data frame containing covariate information for the treated units in the problem.  The row count of this data frame must be equal to the length of the \code{distance.structure} argument, and it is assumed that row \code{i} contains covariate information for the treated unit described by element \code{i} of \code{distance.structure}.  In addition, the column count and column names must be identical to those of the \code{control.info} argument, and the column names must include all of the covariate names mentioned in the \code{fb.list} argument.
+an optional data frame containing covariate information for the treated units in the problem.  The row count of this data frame must be equal to the length of the \code{distance.structure} argument, and it is assumed that row \code{i} contains covariate information for the treated unit described by element \code{i} of \code{distance.structure}.  In addition, the column count and column names must be identical to those of the \code{control.info} argument, and the column names must include all of the covariate names mentioned in the \code{near.exact} and \code{fb.list} arguments.
 }
   \item{control.info}{
 an optional data frame containing covariate information for the control units in the problem.  The row count of this data frame must be no smaller than the maximum control index in the \code{distance.structure} argument, and it is assumed that row \code{i} contains the covariate information for the control indexed by \code{i} in distance.structure.  In addition, the column count and column names must be identical to those of the \code{treated.info} argument.
