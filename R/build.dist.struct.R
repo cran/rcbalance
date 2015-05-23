@@ -50,7 +50,7 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
 	}
         
     if (calip.option == 'propensity') {
-        calip.cov <- glm.fit(X, z, family = binomial())$fitted.values
+        calip.cov <- glm.fit(cbind(rep(1, nrow(X)),X), z, family = binomial())$linear.predictors
         cal <- sd(calip.cov) * caliper
     }else if(calip.option == 'user'){
     	stopifnot(!is.null(calip.cov))
@@ -80,7 +80,7 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
         control.names <- ctrl.nums[exact[z == 0] == exact[treated[i]]]
         costi <- mahalanobis(rX[controls, ], rX[treated[i], ], icov, inverted = T)
         if (calip.option != 'none') 
-        	costi <- costi + pmax(0, abs(calip.cov[i] - calip.cov[controls]) - cal)*cal.penalty
+        	costi <- costi + pmax(0, abs(calip.cov[treated[i]] - calip.cov[controls]) - cal)*cal.penalty
         names(costi) <- control.names
 		dist.struct[[i]] <- round(100*costi)	
     }
