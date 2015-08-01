@@ -3,16 +3,29 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
 	
 	cal.penalty <- 100
 	if(is.null(exact)) exact = rep(1, length(z))	
-	stopifnot(calip.option %in% c('propensity','user','none'))
-    stopifnot(length(z) == (dim(X)[1]))
-    stopifnot(length(exact) == length(z))
-    stopifnot(all((z == 1) | (z == 0)))
+	if(!(calip.option %in% c('propensity','user','none'))){
+		stop('Invalid calip.option specified.')
+	}
     if (is.vector(X)) X <- matrix(X, length(X), 1)
+    if(!(length(z) == (dim(X)[1]))){
+    	stop("Length of z does not match row count in X")
+    }
+    if(!(length(exact) == length(z))){
+    	stop("Length of exact does not match length of z")
+    }
+    if(!(all((z == 1) | (z == 0)))){
+    	stop("The z argument must contain only 1s and 0s")
+    }
    
-	if(is.data.frame(X)){
+    #get rid of columns that do not vary
+	varying <- apply(X,2, function(x) length(unique(x)) > 1)
+	X <- X[,which(varying),drop = FALSE]
+	   
+	if(is.data.frame(X) || is.character(X)){
+		if(!is.data.frame(X)) X <- as.data.frame(X)
 		X.chars <- which(laply(X, class) == 'character')
 		if(length(X.chars) > 0){
-			warning('character variables found in X, converting to factors')
+			print('character variables found in X, converting to factors')
 			for(i in X.chars){
 				X[,i] <- factor(X[,i])
 				
@@ -33,8 +46,9 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
    			}
    		}
 		for(i in rev(X.factors)){
-	     	X <- cbind(X[,-i], model.matrix(as.formula(
-	     		paste('~',colnames(X)[i], '-1')),data=X))  
+	     	dummyXi <- model.matrix(as.formula(
+	     		paste('~',colnames(X)[i], '-1')),data=X)
+	     	X <- cbind(X[,-i], dummyXi)
 	    }
 	      
     }else{
@@ -78,7 +92,7 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
 	
         controls <- nums[(z == 0) & (exact == exact[treated[i]])]
         control.names <- ctrl.nums[exact[z == 0] == exact[treated[i]]]
-        costi <- mahalanobis(rX[controls, ], rX[treated[i], ], icov, inverted = T)
+        costi <- mahalanobis(rX[controls, ,drop=FALSE], rX[treated[i], ], icov, inverted = T)
         if (calip.option != 'none') 
         	costi <- costi + pmax(0, abs(calip.cov[treated[i]] - calip.cov[controls]) - cal)*cal.penalty
         names(costi) <- control.names

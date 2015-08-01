@@ -1,3 +1,5 @@
 exportPattern("^[[:alpha:]]+")
+importFrom("stats", "as.formula", "binomial", "cov", "glm.fit",
+             "mahalanobis", "model.matrix", "sd", "var")
 import(MASS)
 import(plyr)

@@ -54,7 +54,7 @@ a nonnegative value.  This is a tuning parameter that helps ensure the different
 \details{
 In order to perform matching, \code{rcbalance} requires the user to load the \code{optmatch} (>= 0.9-1) package separately.  The manual loading is required due to software license issues.  If the package is not loaded the \code{rcbalance} command will fail with an error saying the \code{optmatch} package is not present.  
 
-The reference below gives background on \code{optmatch}.
+The second reference below gives background on \code{optmatch}.
 }
 \value{
 A list with the following components:
@@ -64,6 +64,8 @@ A list with the following components:
 %% ...
 }
 \references{
+Pimentel, S.D., Kelz, R.R., Silber, J.H., and Rosenbaum, P.R. (2015) Large, sparse optimal matching with refined covariate balance in an observational study of the health outcomes produced by new surgeons, JASA 110 (510), 515-527.	
+	
  Hansen, B.B. and Klopfer, S.O. (2006) Optimal full matching and
   related designs via network flows, JCGS 15 609-627.
 }

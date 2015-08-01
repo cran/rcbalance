@@ -21,7 +21,11 @@ dist2net.matrix <- function(dist.struct, k, exclude.treated = FALSE){
     #build treatment-control arcs		
     for (i in c(1:ntreat)) {
     	controls <- which(is.finite(apply(dist.struct, 2, function(x) x[i]))) #as.numeric(names(dist.struct[[i]]))
-    	stopifnot(length(controls) > 0)
+    	if(!exclude.treated && length(controls) == 0){
+    		stop('Match is infeasible: some treated units have no potential control partners')
+    	}else if(length(controls) == 0){
+    		next	
+    	} 
     	controls <- controls + ntreat #offset control node numbers so they don't overlap with treated node numbers
         startn <- c(startn, rep(treated[i], length(controls)))
         endn <- c(endn, controls)
@@ -111,7 +115,11 @@ function(dist.struct, k, exclude.treated = FALSE){
     #build treatment-control arcs		
     for (i in c(1:ntreat)) {
     	controls <- as.numeric(names(dist.struct[[i]]))
-    	stopifnot(length(controls) > 0)
+    	if(!exclude.treated && length(controls) == 0){
+    		stop('Match is infeasible: some treated units have no potential control partners')
+    	} else if(length(controls) == 0){
+    		next	
+    	} 
     	controls <- controls + ntreat #offset control node numbers so they don't overlap with treated node numbers
         startn <- c(startn, rep(treated[i], length(controls)))
         endn <- c(endn, controls)
@@ -393,7 +401,9 @@ callrelax <- function (net) {
     	stopifnot(length(startn) == length(endn))
     	stopifnot(length(startn) == length(ucap))
     	stopifnot(length(startn) == length(cost))
-    	stopifnot(all(cost == round(cost)))
+    	if(all(cost != round(cost))){
+			stop("Error: distances in distance.structure must be integer-valued")
+		}
     	stopifnot(min(c(startn, endn)) >= 1)
     	stopifnot(max(c(startn, endn)) <= length(b))
     	stopifnot(all(startn != endn))
