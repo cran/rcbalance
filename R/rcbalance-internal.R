@@ -475,7 +475,7 @@ penalize.near.exact <- function(net.layers, near.exact){
 		if(near.exact.pen == 0) near.exact.pen <- theta*net.layers$p
 	}
 	newcost[which(near.exact[startn] != near.exact[endn])] <- newcost[which(near.exact[startn] != near.exact[endn])] + near.exact.pen
-	net.layers$cost <- newcost
+	net.layers$cost <- round(newcost)
 	return(net.layers)
 }
 
