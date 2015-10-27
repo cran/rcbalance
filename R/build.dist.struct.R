@@ -78,7 +78,7 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
     diag(cv) <- diag(cv) + 0.001
     vuntied <- var(1:nobs)
     rat <- sqrt(vuntied/diag(cv))
-    cv <- diag(rat) %*% cv %*% diag(rat)
+    cv <- as.matrix(diag(rat)) %*% cv %*% as.matrix(diag(rat))
     #library(MASS)
     icov <- ginv(cv)
     nums <- 1:nobs
@@ -89,7 +89,6 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
     #dist.mat <- matrix(NA, nrow = length(treated), ncol = nobs)
     dist.struct <- list(length = length(treated))
     for (i in c(1:length(treated))) {
-	
         controls <- nums[(z == 0) & (exact == exact[treated[i]])]
         control.names <- ctrl.nums[exact[z == 0] == exact[treated[i]]]
         costi <- mahalanobis(rX[controls, ,drop=FALSE], rX[treated[i], ], icov, inverted = T)

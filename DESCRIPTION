@@ -1,8 +1,8 @@
 Package: rcbalance
 Type: Package
 Title: Large, Sparse Optimal Matching with Refined Covariate Balance
-Version: 1.7.1
-Date: 2015-09-01
+Version: 1.7.2
+Date: 2015-09-24
 Author: Samuel D. Pimentel
 Maintainer: Samuel D. Pimentel <spi@wharton.upenn.edu>
 Description: Tools for large, sparse optimal matching of treated units
@@ -13,7 +13,7 @@ Description: Tools for large, sparse optimal matching of treated units
 	network optimization problems rather than greedy algorithms. 
 Depends: R (>= 3.0.0), MASS, plyr
 License: MIT + file LICENSE
-Packaged: 2015-09-01 22:08:47 UTC; sdbpimentel
+Packaged: 2015-10-27 03:24:16 UTC; sdbpimentel
 NeedsCompilation: no
 Repository: CRAN
-Date/Publication: 2015-09-02 01:45:54
+Date/Publication: 2015-10-27 08:10:13

@@ -49,7 +49,7 @@ function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = N
 	if(!is.null(fb.list)){
 		if(is.null(target.group) && !is.null(near.exact)){
 			#don't need to repeat checks 
-			target.group <- treated.info
+ 			target.group <- treated.info
 			target.control.info <- treated.control.info
 		 }else{ 
 		 	if(is.null(target.group)){
@@ -98,6 +98,8 @@ function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = N
 		if(class(distance.structure) %in% c('matrix', 'InfinitySparseMatrix', 'BlockedInfinitySparseMatrix')){
 #	if(inherits(distance.structure, 'matrix')){
 		match.network <- dist2net.matrix(distance.structure,k, exclude.treated = exclude.treated)
+	}else if(!is.null(fb.list)){ #specify number of controls
+		match.network <- dist2net(distance.structure,k, exclude.treated = exclude.treated, ncontrol = nrow(control.info))		
 	}else{
 		match.network <- dist2net(distance.structure,k, exclude.treated = exclude.treated)
 	}
@@ -157,7 +159,7 @@ function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = N
 		fb.tables <- NULL
 	}else{
 		#variables for matched subjects only
-		matched.info <- rbind(treated.info[as.numeric(names(matches)),], control.info[as.vector(matches) - sum(match.network$z),])
+		matched.info <- rbind(treated.info[as.numeric(names(matches)),,drop = FALSE], control.info[as.vector(matches) - sum(match.network$z),,drop = FALSE])
 		treatment.status <- c(rep(1, nrow(as.matrix(matches))), rep(0, k*nrow(as.matrix(matches))))
 		#for each fine balance level k, make a vector of nu_k values for the matched subjects	
 		interact.factors.matched = llply(fb.list, function(my.layer) as.factor(apply(matched.info[,match(my.layer, colnames(matched.info)), drop = FALSE],1, function(x) paste(x, collapse ='.'))))

@@ -12,7 +12,7 @@ Building and Manipulating Network Flow Problems
 \description{
 These are internal rcbalance methods not meant to be called directly by users.  They are used to construct a network flow problem from the information about a matching problem that is passed to the \code{rcbalance} method.}
 \usage{
-dist2net(dist.struct, k, exclude.treated = FALSE)
+dist2net(dist.struct, k, exclude.treated = FALSE, ncontrol = NULL)
 
 dist2net.matrix(dist.struct, k, exclude.treated = FALSE)
 
@@ -33,6 +33,10 @@ a nonnegative integer. The number of control units to which each treated unit wi
 
 \item{exclude.treated}{
 	if \code{TRUE}, then when there is no feasible match using all treated units, a minimal number of treated units may be dropped so that a match can be formed.  Specifying this argument adds penalized edges to the network so that such a match can be computed. NOTE: this argument is incompatible with values of \code{k} greater than 1.
+}
+
+\item{ncontrol}{
+	the number of controls in the matching problem.  If left \code{NULL} (the default value), the value will be intuited from the maximum control label in the sparsity object.
 }
 
   \item{net.layers}{

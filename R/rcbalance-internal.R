@@ -93,9 +93,9 @@ dist2net.matrix <- function(dist.struct, k, exclude.treated = FALSE){
 
 
 dist2net <-
-function(dist.struct, k, exclude.treated = FALSE){
+function(dist.struct, k, exclude.treated = FALSE, ncontrol = NULL){
 	ntreat <- length(dist.struct)
-	ncontrol <- max(laply(dist.struct, function(x) max(c(as.numeric(names(x)),0))))
+	if(is.null(ncontrol)) ncontrol <- max(laply(dist.struct, function(x) max(c(as.numeric(names(x)),0))))
 		
 	z <- c(rep(1, ntreat), rep(0, ncontrol))
 	
@@ -233,8 +233,6 @@ function(net.layers, new.layer){
 	
 	#change index of interest to newly added layer
 	i <- parent.layer + 1
-	print(paste('Adding new layer in column', i))
-	
 	
 	#update penalty vector S.i
 	#also update bypass penalties if we have them
