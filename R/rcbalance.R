@@ -167,5 +167,7 @@ function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = N
 	}
 	
 	#need to decrement match indices to ensure controls are numbered 1:nc again
-	return(list('matches' = matrix(matches - sum(match.network$z), ncol =k, dimnames = list(names(matches),1:k)), 'fb.tables' = fb.tables))
+	final.matches <- matrix(matches - sum(match.network$z), ncol =k, dimnames = list(names(matches),1:k))
+	final.matches <- final.matches[order(as.numeric(rownames(final.matches))), , drop=FALSE]
+	return(list('matches' = final.matches, 'fb.tables' = fb.tables))
 }

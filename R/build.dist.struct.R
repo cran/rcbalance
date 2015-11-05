@@ -19,13 +19,14 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
    
     #get rid of columns that do not vary
 	varying <- apply(X,2, function(x) length(unique(x)) > 1)
+	if(!all(varying)) print('Constant-value columns found in X, they will not be used to calculate Mahalanobis distance.')
 	X <- X[,which(varying),drop = FALSE]
 	   
 	if(is.data.frame(X) || is.character(X)){
 		if(!is.data.frame(X)) X <- as.data.frame(X)
 		X.chars <- which(laply(X, class) == 'character')
 		if(length(X.chars) > 0){
-			print('character variables found in X, converting to factors')
+			print('Character variables found in X, converting to factors.')
 			for(i in X.chars){
 				X[,i] <- factor(X[,i])
 				
@@ -74,11 +75,13 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
     rX <- as.matrix(X)
     for (j in 1:(dim(rX)[2])) rX[, j] <- rank(rX[, j])
     cv <- cov(rX)
-    #regularize
-    diag(cv) <- diag(cv) + 0.001
     vuntied <- var(1:nobs)
     rat <- sqrt(vuntied/diag(cv))
-    cv <- as.matrix(diag(rat)) %*% cv %*% as.matrix(diag(rat))
+    if(length(rat) == 1){
+    	cv <- as.matrix(rat) %*% cv %*% as.matrix(rat)
+	}else{
+		cv <- diag(rat) %*% cv %*% diag(rat)
+	}
     #library(MASS)
     icov <- ginv(cv)
     nums <- 1:nobs
