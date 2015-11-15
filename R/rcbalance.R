@@ -163,7 +163,7 @@ function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = N
 		treatment.status <- c(rep(1, nrow(as.matrix(matches))), rep(0, k*nrow(as.matrix(matches))))
 		#for each fine balance level k, make a vector of nu_k values for the matched subjects	
 		interact.factors.matched = llply(fb.list, function(my.layer) as.factor(apply(matched.info[,match(my.layer, colnames(matched.info)), drop = FALSE],1, function(x) paste(x, collapse ='.'))))
-		fb.tables <- llply(interact.factors.matched, function(inter.fact) table(inter.fact, treatment.status))	
+		fb.tables <- llply(interact.factors.matched, function(inter.fact) table('balance.variable' = inter.fact, treatment.status))	
 	}
 	
 	#need to decrement match indices to ensure controls are numbered 1:nc again

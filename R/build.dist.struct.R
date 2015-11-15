@@ -16,12 +16,7 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
     if(!(all((z == 1) | (z == 0)))){
     	stop("The z argument must contain only 1s and 0s")
     }
-   
-    #get rid of columns that do not vary
-	varying <- apply(X,2, function(x) length(unique(x)) > 1)
-	if(!all(varying)) print('Constant-value columns found in X, they will not be used to calculate Mahalanobis distance.')
-	X <- X[,which(varying),drop = FALSE]
-	   
+   	   
 	if(is.data.frame(X) || is.character(X)){
 		if(!is.data.frame(X)) X <- as.data.frame(X)
 		X.chars <- which(laply(X, class) == 'character')
@@ -37,6 +32,7 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
 	     
    		#handle missing data
    		for(i in which(laply(X, function(x) any(is.na(x))))){
+			print(paste('Missing values found in column', i ,'of X; imputing and adding missingness indicators'))
    			if(i %in% X.factors){
    				#for factors, make NA a new factor level
    				X[,i] <- addNA(X[,i])
@@ -63,6 +59,11 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
     	}
 			
 	}
+    #get rid of columns that do not vary
+	varying <- apply(X,2, function(x) length(unique(x)) > 1)
+	if(!all(varying)) print('Constant-value columns found in X, they will not be used to calculate Mahalanobis distance.')
+	X <- X[,which(varying),drop = FALSE]
+	
         
     if (calip.option == 'propensity') {
         calip.cov <- glm.fit(cbind(rep(1, nrow(X)),X), z, family = binomial())$linear.predictors
