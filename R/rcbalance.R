@@ -152,22 +152,22 @@ function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = N
 		match.df <- match.df[-which(match.df$treat %in% matched.or.not[which(matched.or.not[,2] == 0),1]),]
 	}
 	match.df$treat <- as.factor(as.character(match.df$treat))
-	matches <- daply(match.df, .(match.df$treat), function(treat.edges) treat.edges$control[treat.edges$x == 1])
+	matches <- as.matrix(daply(match.df, .(match.df$treat), function(treat.edges) treat.edges$control[treat.edges$x == 1]))
 
 	#make a contingency table for each fine balance factor 
 	if(is.null(fb.list)){
 		fb.tables <- NULL
 	}else{
 		#variables for matched subjects only
-		matched.info <- rbind(treated.info[as.numeric(names(matches)),,drop = FALSE], control.info[as.vector(matches) - sum(match.network$z),,drop = FALSE])
-		treatment.status <- c(rep(1, nrow(as.matrix(matches))), rep(0, k*nrow(as.matrix(matches))))
+		matched.info <- rbind(treated.info[as.numeric(rownames(matches)),,drop = FALSE], control.info[as.vector(matches) - sum(match.network$z),,drop = FALSE])
+		treatment.status <- c(rep(1, nrow(matches)), rep(0, k*nrow(matches)))
 		#for each fine balance level k, make a vector of nu_k values for the matched subjects	
 		interact.factors.matched = llply(fb.list, function(my.layer) as.factor(apply(matched.info[,match(my.layer, colnames(matched.info)), drop = FALSE],1, function(x) paste(x, collapse ='.'))))
 		fb.tables <- llply(interact.factors.matched, function(inter.fact) table('balance.variable' = inter.fact, treatment.status))	
 	}
 	
 	#need to decrement match indices to ensure controls are numbered 1:nc again
-	final.matches <- matrix(matches - sum(match.network$z), ncol =k, dimnames = list(names(matches),1:k))
+	final.matches <- matrix(matches - sum(match.network$z), ncol =k, dimnames = list(rownames(matches),1:k))
 	final.matches <- final.matches[order(as.numeric(rownames(final.matches))), , drop=FALSE]
 	return(list('matches' = final.matches, 'fb.tables' = fb.tables))
 }
