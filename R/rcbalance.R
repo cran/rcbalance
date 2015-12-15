@@ -1,5 +1,5 @@
 rcbalance <-
-function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = NULL, control.info = NULL, exclude.treated = FALSE, target.group = NULL,  k = 1, penalty = 3){
+function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = NULL, control.info = NULL, exclude.treated = FALSE, target.group = NULL,  k = 1, penalty = 3, tol = 1e-5){
 		
 ####################  CHECK INPUT #################### 
 	if(!(k > 0)){
@@ -95,12 +95,11 @@ function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = N
 
 
 ######## SET UP TREATED-CONTROL PORTION OF NETWORK	#########
-		if(class(distance.structure) %in% c('matrix', 'InfinitySparseMatrix', 'BlockedInfinitySparseMatrix')){
-#	if(inherits(distance.structure, 'matrix')){
+	if (inherits(distance.structure, c('matrix', 'InfinitySparseMatrix'))) {
 		match.network <- dist2net.matrix(distance.structure,k, exclude.treated = exclude.treated)
-	}else if(!is.null(fb.list)){ #specify number of controls
+	} else if (!is.null(fb.list)){ #specify number of controls
 		match.network <- dist2net(distance.structure,k, exclude.treated = exclude.treated, ncontrol = nrow(control.info))		
-	}else{
+	} else {
 		match.network <- dist2net(distance.structure,k, exclude.treated = exclude.treated)
 	}
 	
@@ -124,12 +123,27 @@ function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = N
 
 
 ############################ RUN MATCH ##############################
-	if(any(is.na(as.integer(match.network$cost)))){
-		stop('Integer overflow in penalty vector!  Run with a lower penalty value or fewer levels of fine balance.')
+    #convert costs to integers if necessary
+	cost <- match.network$cost
+    if(any(cost != round(cost))){
+    	intcost <- round(cost/tol)
+    	#use smaller scaling factor if possible
+    	searchtol <- 10^(-c(1:floor(log10(.Machine$integer.max))))
+    	searchtol <- searchtol[searchtol > tol]
+    	for (newtol in searchtol){
+    		new.intcost <- round(intcost*tol/newtol)
+    		if (any(new.intcost != intcost*tol/newtol)) break
+    		tol <- newtol
+    		intcost <- new.intcost
+    	}
+    	cost <- intcost    		
 	}
+	if (any(is.na(as.integer(cost)))) {
+		stop('Integer overflow in penalties!  Run with a higher tolerance, a lower penalty value, or fewer levels of fine balance.')
+	} 	
 	o <- callrelax(match.network)	
 	if(o$feasible == 0){
-		stub.message <- 'Match is infeasible or penalties are too large for RELAX to process! Consider reducing penalty'
+		stub.message <- 'Match is infeasible or penalties are too large for RELAX to process! Consider reducing penalty or raising tolerance'
 		if(k > 1){	
 			#print()
 			stop(paste(stub.message, 'or reducing k.'))

@@ -1,5 +1,5 @@
 build.dist.struct <-
-function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, caliper = 0.2){
+function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, caliper = 0.2, verbose = FALSE){
 	
 	cal.penalty <- 100
 	if(is.null(exact)) exact = rep(1, length(z))	
@@ -19,20 +19,20 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
    	   
 	if(is.data.frame(X) || is.character(X)){
 		if(!is.data.frame(X)) X <- as.data.frame(X)
-		X.chars <- which(laply(X, class) == 'character')
+		X.chars <- which(laply(X, function(y) 'character' %in% class(y)))
 		if(length(X.chars) > 0){
-			print('Character variables found in X, converting to factors.')
+			if (verbose) print('Character variables found in X, converting to factors.')
 			for(i in X.chars){
 				X[,i] <- factor(X[,i])
 				
 			}
 		}
 	    #if some variables are factors convert to dummies
-	     X.factors <- which(laply(X, class) == 'factor')
+	     X.factors <-  which(laply(X, function(y) 'factor' %in% class(y)))
 	     
    		#handle missing data
    		for(i in which(laply(X, function(x) any(is.na(x))))){
-			print(paste('Missing values found in column', i ,'of X; imputing and adding missingness indicators'))
+			if (verbose) print(paste('Missing values found in column', i ,'of X; imputing and adding missingness indicators'))
    			if(i %in% X.factors){
    				#for factors, make NA a new factor level
    				X[,i] <- addNA(X[,i])
@@ -61,7 +61,7 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
 	}
     #get rid of columns that do not vary
 	varying <- apply(X,2, function(x) length(unique(x)) > 1)
-	if(!all(varying)) print('Constant-value columns found in X, they will not be used to calculate Mahalanobis distance.')
+	if(!all(varying) && verbose) print('Constant-value columns found in X, they will not be used to calculate Mahalanobis distance.')
 	X <- X[,which(varying),drop = FALSE]
 	
         
@@ -69,8 +69,8 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
         calip.cov <- glm.fit(cbind(rep(1, nrow(X)),X), z, family = binomial())$linear.predictors
         cal <- sd(calip.cov) * caliper
     }else if(calip.option == 'user'){
-    	stopifnot(!is.null(calip.cov))
-    	cal <- sd(calip.cov) * caliper
+    		stopifnot(!is.null(calip.cov))
+    		cal <- sd(calip.cov) * caliper
     }
     nobs <- length(z)
     rX <- as.matrix(X)
@@ -79,7 +79,7 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
     vuntied <- var(1:nobs)
     rat <- sqrt(vuntied/diag(cv))
     if(length(rat) == 1){
-    	cv <- as.matrix(rat) %*% cv %*% as.matrix(rat)
+    		cv <- as.matrix(rat) %*% cv %*% as.matrix(rat)
 	}else{
 		cv <- diag(rat) %*% cv %*% diag(rat)
 	}
@@ -90,16 +90,18 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
     treated <- nums[z == 1]
     
     #find distance between each treated and each control it will be connected to and store in a distance structure
-    #dist.mat <- matrix(NA, nrow = length(treated), ncol = nobs)
-    dist.struct <- list(length = length(treated))
+    dist.struct <- list()
     for (i in c(1:length(treated))) {
         controls <- nums[(z == 0) & (exact == exact[treated[i]])]
         control.names <- ctrl.nums[exact[z == 0] == exact[treated[i]]]
         costi <- mahalanobis(rX[controls, ,drop=FALSE], rX[treated[i], ], icov, inverted = T)
-        if (calip.option != 'none') 
-        	costi <- costi + pmax(0, abs(calip.cov[treated[i]] - calip.cov[controls]) - cal)*cal.penalty
+        if (calip.option != 'none') {
+        		calip.update <- rep(0, length(costi))
+        		calip.update[abs(calip.cov[treated[i]] - calip.cov[controls]) - cal > 0] <- Inf
+        		costi <- costi + calip.update
+        	}
         names(costi) <- control.names
-		dist.struct[[i]] <- round(100*costi)	
+		dist.struct[[i]] <- costi[is.finite(costi)]	
     }
 
 	return(dist.struct)

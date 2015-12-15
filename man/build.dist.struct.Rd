@@ -9,7 +9,7 @@ This function computes rank-based Mahalanobis distances between treated and cont
 }
 \usage{
 build.dist.struct(z, X, exact = NULL, calip.option = "propensity",
-calip.cov = NULL, caliper = 0.2)
+calip.cov = NULL, caliper = 0.2, verbose = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -30,6 +30,9 @@ see \code{calip.option}.
 }
   \item{caliper}{
 gives the size of the caliper when the user specifies the \code{calip.option} argument as 'propensity' or 'calip.cov'.
+}
+  \item{verbose}{
+if \code{TRUE}, prints output describing specific adjustments made in creating the distance objects.  	
 }
 }
 \details{

@@ -10,7 +10,7 @@ This function computes an optimal match with refined covariate balance.
 \usage{
 rcbalance(distance.structure, near.exact = NULL, fb.list = NULL, 
 treated.info = NULL, control.info = NULL, exclude.treated = FALSE, target.group = NULL,
- k = 1, penalty = 3)
+ k = 1, penalty = 3, tol = 1e-5)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -48,8 +48,13 @@ if it differs from the covariate distribution of the treated units.  This argume
 a nonnegative integer. The number of control units to which each treated unit will be matched.
 }
   \item{penalty}{
-a nonnegative value.  This is a tuning parameter that helps ensure the different levels of refined covariate balance are prioritized correctly.   Setting the penalty higher tends to improve the guarantee of match optimality up to a point, but penalties above a certain level cause integer overflows and throw errors.  It is not recommended that the user change this parameter from its default value.
+a value greater than 1.  This is a tuning parameter that helps ensure the different levels of refined covariate balance are prioritized correctly.   Setting the penalty higher tends to improve the guarantee of match optimality up to a point, but penalties above a certain level cause integer overflows and throw errors.  Usually it is not recommended that the user change this parameter from its default value.
 }
+
+\item{tol}{
+	edge cost tolerance.  This is the smallest tolerated difference between matching costs; cost differences smaller than this will be considered zero.  Match distances will be scaled by inverse tolerance, so when matching with large edge costs or penalties the tolerance may need to be increased.
+}
+
 }
 \details{
 In order to perform matching, \code{rcbalance} requires the user to load the \code{optmatch} (>= 0.9-1) package separately.  The manual loading is required due to software license issues.  If the package is not loaded the \code{rcbalance} command will fail with an error saying the \code{optmatch} package is not present.  

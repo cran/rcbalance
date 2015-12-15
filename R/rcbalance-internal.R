@@ -1,4 +1,8 @@
 
+.onAttach <- function(libname, pkgname){
+	packageStartupMessage('optmatch (>= 0.9-1) needed to run the rcbalance command.  Please load optmatch and agree to its academic license before calling rcbalance.')	
+}
+
 dist2net.matrix <- function(dist.struct, k, exclude.treated = FALSE){
 	ntreat <- nrow(dist.struct)
 	ncontrol <- ncol(dist.struct)
@@ -16,21 +20,33 @@ dist2net.matrix <- function(dist.struct, k, exclude.treated = FALSE){
     endn <- NULL
     cost <- NULL
     ucap <- NULL
-    
+
+	if (inherits(dist.struct, 'InfinitySparseMatrix')){
+		lookup.obj <- data.frame('treated' = attributes(dist.struct)$rows, 'control' = attributes(dist.struct)$cols, 'distance' = as.vector(dist.struct))	
+	}
 
     #build treatment-control arcs		
     for (i in c(1:ntreat)) {
-    	controls <- which(is.finite(apply(dist.struct, 2, function(x) x[i]))) #as.numeric(names(dist.struct[[i]]))
-    	if(!exclude.treated && length(controls) == 0){
-    		stop('Match is infeasible: some treated units have no potential control partners')
-    	}else if(length(controls) == 0){
-    		next	
-    	} 
-    	controls <- controls + ntreat #offset control node numbers so they don't overlap with treated node numbers
+    	
+	    	if (inherits(dist.struct, 'InfinitySparseMatrix')){
+	    	  index.i <- which(lookup.obj$treated == i & 
+	        is.finite(lookup.obj$distance))	
+	   	  controls <- lookup.obj$control[index.i]
+	   	  match.costs <- lookup.obj$distance[index.i]			
+	    	} else {
+	    	  controls <- which(is.finite(dist.struct[i,]))
+	    	  match.costs <- dist.struct[i,controls] 	
+	    	}
+    
+	    	if(!exclude.treated && length(controls) == 0){
+	    		stop('Match is infeasible: some treated units have no potential control partners')
+	    	}else if(length(controls) == 0){
+	    		next	
+	    	} 
+	    	controls <- controls + ntreat #offset control node numbers so they don't overlap with treated node numbers
         startn <- c(startn, rep(treated[i], length(controls)))
         endn <- c(endn, controls)
-        match.costs <- apply(dist.struct, 2, function(x) x[i])
-        cost <- c(cost, match.costs[is.finite(match.costs)])
+		cost <- c(cost, match.costs)
         ucap <- c(ucap, rep(1, length(controls)))
     }
     b <- z*k #give each treated unit a supply of k
@@ -169,7 +185,7 @@ function(dist.struct, k, exclude.treated = FALSE, ncontrol = NULL){
 		startn <- c(startn, treat.idx)
 		endn <- c(endn, ll.nodes)
 		ucap <- c(ucap, rep(1, length(treat.idx)))
-		#set bypass cost to some of ntreat largest t-c distances
+		#set bypass cost to sum of ntreat largest t-c distances
 		ntreat.largest <- sum(sort(cost, decreasing = TRUE)[1:ntreat])
 		cost <- c(cost, rep(ntreat.largest, length(treat.idx)))
 	}
@@ -390,7 +406,9 @@ function(net.layers, new.layer){
 
 
 callrelax <- function (net) {
-		if(unlist(net)[1] == "test") return("Loaded!")
+	if (!requireNamespace("optmatch", quietly = TRUE)) {
+	  stop('Error: package optmatch (>= 0.9-1) not loaded.  To run rcbalance command, you must install optmatch first and agree to the terms of its license.')
+	}
     	startn <- net$startn
     	endn <- net$endn
     	ucap <- net$ucap
@@ -399,30 +417,17 @@ callrelax <- function (net) {
     	stopifnot(length(startn) == length(endn))
     	stopifnot(length(startn) == length(ucap))
     	stopifnot(length(startn) == length(cost))
-    	if(all(cost != round(cost))){
-			stop("Error: distances in distance.structure must be integer-valued")
-		}
     	stopifnot(min(c(startn, endn)) >= 1)
     	stopifnot(max(c(startn, endn)) <= length(b))
     	stopifnot(all(startn != endn))
-    	#library(optmatch)
     	nnodes <- length(b)
-		my.expr <- parse(text = '.Fortran("relaxalg", nnodes, as.integer(length(startn)), 
+    my.expr <- parse(text = '.Fortran("relaxalg", nnodes, as.integer(length(startn)), 
     	    as.integer(startn), as.integer(endn), as.integer(cost), 
     	    as.integer(ucap), as.integer(b), x1 = integer(length(startn)), 
     	    crash1 = as.integer(0), large1 = as.integer(.Machine$integer.max/4), 
     	    feasible1 = integer(1), NAOK = FALSE, DUP = TRUE, PACKAGE = "optmatch")')
-    	fop <- tryCatch(eval(my.expr),
-    		error = function(e){ 
-    			if(e$message == "\"relaxalg\" not available for .Fortran() for package \"optmatch\""){
-    				 stop('Error: package optmatch (>= 0.9-1) not loaded.  To run rcbalance command, please install and load optmatch first.')
-    				}else{
-    				 stop(e)	
-    				}
-    			},
-    	finally =NULL)
-		fop <- eval(my.expr)	
-   	 	x <- fop$x1
+	fop <- eval(my.expr)	
+   	x <- fop$x1
     	feasible <- fop$feasible1
     	crash <- fop$crash1
     	list(crash = crash, feasible = feasible, x = x)
@@ -446,7 +451,7 @@ function(net.layers, newtheta, newp = NA){
 		new.byp.pen <- newtheta*max(newpen)
 		newcost[which(bypass.edges)] <- new.byp.pen
 	}	
-	net.layers$cost <- round(newcost)
+	net.layers$cost <- newcost
 	net.layers$penalties <- newpen
 	net.layers$theta <- newtheta
 	return(net.layers)
@@ -473,7 +478,7 @@ penalize.near.exact <- function(net.layers, near.exact){
 		if(near.exact.pen == 0) near.exact.pen <- theta*net.layers$p
 	}
 	newcost[which(near.exact[startn] != near.exact[endn])] <- newcost[which(near.exact[startn] != near.exact[endn])] + near.exact.pen
-	net.layers$cost <- round(newcost)
+	net.layers$cost <- newcost
 	return(net.layers)
 }
 
