@@ -104,5 +104,6 @@ function(z, X, exact = NULL, calip.option = 'propensity', calip.cov = NULL, cali
 		dist.struct[[i]] <- costi[is.finite(costi)]	
     }
 
+	if (sum(laply(dist.struct, length)) == 0) stop('All matches forbidden. Considering using a wider caliper?')
 	return(dist.struct)
 }

@@ -28,3 +28,17 @@ test_that('Correct number excluded', {
 		excl.count <- sum(pmax(match.tab[,2] - match.tab[,1],0))
 		expect_equal(sum(nuclearplants$pr) - nrow(match.out), excl.count)
 })
+
+
+test_that('Empty distances are detected', {
+	expect_error(build.dist.struct(z = nuclearplants$pr[10:32], X = nuclearplants[10:32,c(3:5,8:9)]), 'All matches forbidden. Considering using a wider caliper?')
+})
+
+#match with only a single treated unit
+dist.struct2 <- build.dist.struct(z = nuclearplants$pr[10:32], X = nuclearplants[10:32,c(3:5,8:9)], calip.option = 'none')
+
+test_that('Matches with one pair are returned correctly', {
+	match.out <- rcbalance(dist.struct2, fb.list = list('ct'), treated.info = nuclearplants[10,], control.info = nuclearplants[nuclearplants$pr == 0,])
+	expect_equal(rownames(match.out$matches), '1')
+	expect_equal(dim(match.out$fb.tables[[1]]), c(1,2))
+})

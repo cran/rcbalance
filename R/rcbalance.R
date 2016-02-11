@@ -124,6 +124,7 @@ function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = N
 
 ############################ RUN MATCH ##############################
     #convert costs to integers if necessary
+    #h/t optmatch developers for ideas about how to do this nicely 
 	cost <- match.network$cost
     if(any(cost != round(cost))){
     	intcost <- round(cost/tol)
@@ -166,7 +167,7 @@ function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = N
 		match.df <- match.df[-which(match.df$treat %in% matched.or.not[which(matched.or.not[,2] == 0),1]),]
 	}
 	match.df$treat <- as.factor(as.character(match.df$treat))
-	matches <- as.matrix(daply(match.df, .(match.df$treat), function(treat.edges) treat.edges$control[treat.edges$x == 1]))
+	matches <- as.matrix(daply(match.df, .(match.df$treat), function(treat.edges) treat.edges$control[treat.edges$x == 1], .drop_o = FALSE))
 
 	#make a contingency table for each fine balance factor 
 	if(is.null(fb.list)){

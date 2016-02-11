@@ -17,9 +17,7 @@ treated.info = NULL, control.info = NULL, exclude.treated = FALSE, target.group 
   \item{distance.structure}{
  a list of vectors that encodes information about covariate distances between treated and control units.  The list is equal in length to the number of treated units.  Each vector corresponds to a treated unit and is equal in length to the number of control units to which it can be matched.  It is assumed that there are a total of \code{nc} control units in the problem and that they are numbered from 1 to \code{nc}.  The names of each vector in the list give the index (in the vector \code{1:nc}) of the control units to which the treated unit in question can be matched, and the elements of each vector are the covariate distances between the treated unit and the corresponding control.  Note that for a dense matching problem (in which each treated unit can be matched to any control), every vector in the list will have length nc and rownames 1 through nc.
  
- Alternatively, this same information can be passed as a \code{matrix} or  \code{InfinitySparseMatrix} with rows corresponding to treated units and columns corresponding to controls.  Entries given as \code{Inf} correspond to pairs that cannot be matched.  When working with very large datasets, however, it is recommended to use the list-of-vectors distance specification.
- 
- Note that non-integer distances in \code{distance.structure} will be rounded to the nearest integer, so users may wish to multiply their distance by a factor of 100 or 1000 to preserve fine distinctions.
+ Alternatively, this same information can be passed as a \code{matrix} or  \code{InfinitySparseMatrix} with rows corresponding to treated units and columns corresponding to controls.  Entries given as \code{Inf} correspond to pairs that cannot be matched.  
 }
 
 \item{near.exact}{ 
