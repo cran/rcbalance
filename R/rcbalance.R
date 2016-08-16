@@ -141,7 +141,8 @@ function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = N
 	}
 	if (any(is.na(as.integer(cost)))) {
 		stop('Integer overflow in penalties!  Run with a higher tolerance, a lower penalty value, or fewer levels of fine balance.')
-	} 	
+	}
+	match.network$cost <- cost	 	
 	o <- callrelax(match.network)	
 	if(o$feasible == 0){
 		stub.message <- 'Match is infeasible or penalties are too large for RELAX to process! Consider reducing penalty or raising tolerance'
@@ -151,7 +152,7 @@ function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = N
 		}
 		if(!exclude.treated){
 			#print()
-			stop(paste(stub.message, 'or setting exclude.treated = TRUE.'))
+			stop(paste(stub.message, ', or setting exclude.treated = TRUE.'))
 		}
 		#print()
 		stop(paste(stub.message, '.', sep =''))
