@@ -162,7 +162,7 @@ function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = N
 	#################### PREPARE OUTPUT #################### 	
 	#make a |T| x k matrix with rownames equal to index of treated unit and indices of its matched controls stored in each row
 	x <- o$x[1:match.network$tcarcs]	
-	match.df <- data.frame('treat' = as.factor(match.network$startn[1:match.network$tcarcs]), 'x' = x, 'control' = match.network$endn[1:match.network$tcarcs])
+	match.df <- data.frame('treat' = match.network$startn[1:match.network$tcarcs], 'x' = x, 'control' = match.network$endn[1:match.network$tcarcs])
 	matched.or.not <- daply(match.df, .(match.df$treat), function(treat.edges) c(as.numeric(as.character(treat.edges$treat[1])), sum(treat.edges$x)), .drop_o = FALSE)
 	if(any(matched.or.not[,2] == 0)){
 		match.df <- match.df[-which(match.df$treat %in% matched.or.not[which(matched.or.not[,2] == 0),1]),]
