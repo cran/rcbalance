@@ -1,7 +1,7 @@
 library(rcbalance)
-library(optmatch)
+if (requireNamespace("optmatch", quietly = TRUE)){
 context('Building distance objects')
-
+library(optmatch)
 data(nuclearplants)
 
 #reorder nuclearplants dataframe so treated units come first
@@ -63,4 +63,4 @@ test_that('Missing values are handled properly', {
 	)
 })
 
-
+}

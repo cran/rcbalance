@@ -24,7 +24,8 @@ function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = N
 			stop('treated.info and control.info must have identical column names')
 		}	
 		treated.control.info <- rbind(treated.info, control.info)
-		if(class(distance.structure) %in% c('matrix', 'InfinitySparseMatrix', 'BlockedInfinitySparseMatrix')){		
+		if(any(class(distance.structure) %in% 
+		       c('matrix', 'InfinitySparseMatrix', 'BlockedInfinitySparseMatrix'))){		
 			if(nrow(treated.info) != nrow(distance.structure)){
 				stop('Dimensions of treated.info and distance.structure do not agree')
 			}
@@ -65,7 +66,8 @@ function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = N
 				stop('treated.info and control.info must have identical column names')
 			}	
 			target.control.info <- rbind(target.group, control.info)
-			if(class(distance.structure) %in% c('matrix', 'InfinitySparseMatrix', 'BlockedInfinitySparseMatrix')){		
+			if(any(class(distance.structure) %in% 
+			       c('matrix', 'InfinitySparseMatrix', 'BlockedInfinitySparseMatrix'))){		
 				if(nrow(target.group) != nrow(distance.structure)){
 					stop('target.group and distance.structure dimensions do not agree')
 				}
@@ -157,11 +159,16 @@ function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = N
 		#print()
 		stop(paste(stub.message, '.', sep =''))
 	}
+	if('no.optmatch' %in% names(o)){
+		return(NULL)
+	}
+		
 	
 	
 	#################### PREPARE OUTPUT #################### 	
 	#make a |T| x k matrix with rownames equal to index of treated unit and indices of its matched controls stored in each row
 	x <- o$x[1:match.network$tcarcs]	
+	if(all(x == 0)) warning('No matched pairs formed.')
 	match.df <- data.frame('treat' = match.network$startn[1:match.network$tcarcs], 'x' = x, 'control' = match.network$endn[1:match.network$tcarcs])
 	matched.or.not <- daply(match.df, .(match.df$treat), function(treat.edges) c(as.numeric(as.character(treat.edges$treat[1])), sum(treat.edges$x)), .drop_o = FALSE)
 	if(any(matched.or.not[,2] == 0)){

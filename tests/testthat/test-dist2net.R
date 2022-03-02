@@ -1,5 +1,6 @@
 library(rcbalance)
-library(optmatch)
+if (requireNamespace("optmatch", quietly = TRUE)){
+  library(optmatch)
 context('Converting distance to network')
 
 data(nuclearplants)
@@ -28,7 +29,7 @@ test_that('Compatible with InfinitySparseMatrix and BlockedInfinitySparseMatrix'
   expect_equal(length(block.net$b)-1, sum(dim(block.mat)))
   expect_equal(block.net$tcarcs, sum(is.finite(block.mat)))  	
 })
-
+}
 
 #TODO: make sure I don't round distances too sloppily.  Compare to optmatch
 #TODO: performance benchmarking for large problems with InfinitySparseMatrix and BlockedInfinitySparseMatrix

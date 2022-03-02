@@ -1,5 +1,6 @@
 library(rcbalance)
-library(optmatch)
+if (requireNamespace("optmatch", quietly = TRUE)){
+  library(optmatch)
 context('Excluding treated units')
 
 data(nuclearplants)
@@ -31,7 +32,10 @@ test_that('Correct number excluded', {
 
 
 test_that('Empty distances are detected', {
-	expect_error(build.dist.struct(z = nuclearplants$pr[10:32], X = nuclearplants[10:32,c(3:5,8:9)]), 'All matches forbidden. Considering using a wider caliper?')
+  expect_warning(expect_error(build.dist.struct(z = nuclearplants$pr[10:32], 
+                                                X = nuclearplants[10:32,c(3:5,8:9)]), 
+                              'All matches forbidden. Considering using a wider caliper?'),
+                 'glm.fit: fitted probabilities numerically 0 or 1 occurred')
 })
 
 #match with only a single treated unit
@@ -42,3 +46,4 @@ test_that('Matches with one pair are returned correctly', {
 	expect_equal(rownames(match.out$matches), '1')
 	expect_equal(dim(match.out$fb.tables[[1]]), c(1,2))
 })
+}

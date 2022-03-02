@@ -1,5 +1,6 @@
 library(rcbalance)
-library(optmatch)
+if (requireNamespace("optmatch", quietly = TRUE)){
+  library(optmatch)
 context('1-to-k matching')
 
 data(nuclearplants)
@@ -23,4 +24,4 @@ test_that("1-to-k match with refined balance has correct column count and table 
   tableSums <- t(sapply(my.out$fb.tables, colSums))
   expect_equal(tableSums[,1],2*tableSums[,2])
 })
-
+}
