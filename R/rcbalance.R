@@ -161,10 +161,6 @@ function(distance.structure, near.exact = NULL, fb.list = NULL,
 	  #print()
 	  stop(paste(stub.message, '.', sep =''))
 	}
-	if('no.optmatch' %in% names(o)){
-	  return(NULL)
-	}
-	
 		
 	
 	

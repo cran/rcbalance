@@ -1,7 +1,3 @@
-.onAttach <- function(libname, pkgname){
-	packageStartupMessage('optmatch (>= 0.9-1) needed to run the rcbalance command.  Please load optmatch and agree to its academic license before calling rcbalance.')	
-}
-
 dist2net.matrix <- function(dist.struct, k, exclude.treated = FALSE){
 	ntreat <- nrow(dist.struct)
 	ncontrol <- ncol(dist.struct)

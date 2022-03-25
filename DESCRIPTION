@@ -1,8 +1,8 @@
 Package: rcbalance
 Type: Package
 Title: Large, Sparse Optimal Matching with Refined Covariate Balance
-Version: 1.8.7
-Date: 2022-3-23
+Version: 1.8.8
+Date: 2022-3-25
 Author: Samuel D. Pimentel
 Maintainer: Samuel D. Pimentel <spi@berkeley.edu>
 Description: Tools for large, sparse optimal matching of treated units
@@ -24,6 +24,6 @@ License: MIT + file LICENSE
 Suggests: optmatch, testthat, rrelaxiv
 Additional_repositories: https://errickson.net/rrelaxiv/
 NeedsCompilation: no
-Packaged: 2022-03-24 16:49:08 UTC; sdbpimentel
+Packaged: 2022-03-25 16:55:21 UTC; sdbpimentel
 Repository: CRAN
-Date/Publication: 2022-03-25 08:00:02 UTC
+Date/Publication: 2022-03-25 23:30:02 UTC

@@ -1,11 +1,11 @@
-ca8c456e6d5252655f65d1ef9073c972 *DESCRIPTION
+8931fbbc7567e8726600ecd574032dc0 *DESCRIPTION
 0ba3c7c94594c4622566f1f3af14f0e6 *LICENSE
 5f77688383f748896d4704876a71f728 *NAMESPACE
 e2e943fdfc9606d47113188474e3572d *R/build.dist.struct.R
 72b86b587102a16b4c165ca85e424665 *R/count.pairings.R
-3c7088483e9de249e4d569a7d660ab53 *R/rcbalance-internal.R
-0cf79c19738acccc59ac98e81172c936 *R/rcbalance.R
-3bd09d98ab99626e99f5733719aec591 *build/partial.rdb
+b554fe298bb94b9b91c0c83657fab769 *R/rcbalance-internal.R
+c55bc4023113fcc9c941e99bc5d8c99d *R/rcbalance.R
+a6592c2a175f2766d66e7d4c91d53096 *build/partial.rdb
 24b0ce8d2794f5b24536047f0695be99 *man/build.dist.struct.Rd
 30bb27f13d632e421443e972367ac87a *man/callrelax.Rd
 a4325e8aead5883f0d630fbadcf3f8f7 *man/count.pairings.Rd
