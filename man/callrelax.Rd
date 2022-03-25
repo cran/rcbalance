@@ -2,15 +2,15 @@
 \alias{callrelax}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-	Solve Network Flow Problem using RELAX-IV Algorithm
+	Solve Network Flow Problem using External Solver
 }
 \description{
-	An rcbalance method not meant to be called directly by users.  Solves network flow optimization problems by calling the RELAX-IV algorithm, as implemented in FORTRAN by Dimitri Bertsekas and Paul Tseng.  
+Solves network flow optimization problems by calling an external solver, either the Lemon Optimization library or the RELAX-IV algorithm, as implemented in FORTRAN by Dimitri Bertsekas and Paul Tseng.  
 	
-IMPORTANT NOTE 1: the RELAX-IV code is not contained in this R package due to software license issues.  Users can only access it by loading the \code{optmatch} package (>= 0.9-1) and accepting its license.  The reference below gives background on \code{optmatch}.
+IMPORTANT NOTE 1: the RELAX-IV code is bound by an academic license; as a result the \code{rrelaxiv} package implementing it is not available on CRAN and must be downloaded separately. 
 }
 \usage{
-callrelax(net)
+callrelax(net, solver = 'rlemon')
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -24,17 +24,20 @@ callrelax(net)
   		\item b: a vector of length nnode containing the (integer) supply or demand of each node in the network.  Supplies are given as positive numbers and demands as negative numbers.
   	}
 }
+
+\item{solver}{
+the name of the package used to solve the network flow optimization problem underlying the match, one of 'rlemon' (which uses the Lemon Optimization Library) and 'rrelaxiv' (which uses the RELAX-IV algorithm). 
+}
+
+
 }
 
 \value{
 A list with the following elements:
-\item{crash}{an integer, equal to zero if the algorithm ran correctly and equal to 1 if it crashed.}
-\item{feasible}{an integer, equal to zero if the problem is infeasible and equal to 1 if it is feasible.}
+\item{crash}{an integer equal to zero (included in order to support legacy versions of code).}
+\item{feasible}{an integer, equal to zero if the problem is infeasible and equal to 1 if it is feasible. A
+network with a supply/demand vector of all zeroes may also be flagged as infeasible.}
 \item{x}{a vector equal in length to the number of arcs in argument problem net, giving in each coordinate the number of units of flow passing across the corresponding edge in the optimal network flow.}
-}
-\references{
- Hansen, B.B. and Klopfer, S.O. (2006) Optimal full matching and
-  related designs via network flows, JCGS 15 609-627.
 }
 \author{
 Samuel D. Pimentel

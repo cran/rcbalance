@@ -10,7 +10,7 @@ This function computes an optimal match with refined covariate balance.
 \usage{
 rcbalance(distance.structure, near.exact = NULL, fb.list = NULL, 
 treated.info = NULL, control.info = NULL, exclude.treated = FALSE, target.group = NULL,
- k = 1, penalty = 3, tol = 1e-5)
+ k = 1, penalty = 3, tol = 1e-5, solver = 'rlemon')
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -53,11 +53,16 @@ a value greater than 1.  This is a tuning parameter that helps ensure the differ
 	edge cost tolerance.  This is the smallest tolerated difference between matching costs; cost differences smaller than this will be considered zero.  Match distances will be scaled by inverse tolerance, so when matching with large edge costs or penalties the tolerance may need to be increased.
 }
 
+
+\item{solver}{
+the name of the package used to solve the network flow optimization problem underlying the match, one of 'rlemon' (which uses the Lemon Optimization Library) and 'rrelaxiv' (which uses the RELAX-IV algorithm). 
+}
+
 }
 \details{
-In order to perform matching, \code{rcbalance} requires the user to load the \code{optmatch} (>= 0.9-1) package separately.  The manual loading is required due to software license issues.  If the package is not loaded the \code{rcbalance} command will fail with an error saying the \code{optmatch} package is not present.  
-
-The second reference below gives background on \code{optmatch}.
+To use the option \code{solver = 'rrelaxiv'}, the user must install the
+\code{rrelaxiv} manually; it is not hosted on CRAN because it carries an academic
+license.  
 }
 \value{
 A list with the following components:
@@ -68,9 +73,7 @@ A list with the following components:
 }
 \references{
 Pimentel, S.D., Kelz, R.R., Silber, J.H., and Rosenbaum, P.R. (2015) Large, sparse optimal matching with refined covariate balance in an observational study of the health outcomes produced by new surgeons, JASA 110 (510), 515-527.	
-	
- Hansen, B.B. and Klopfer, S.O. (2006) Optimal full matching and
-  related designs via network flows, JCGS 15 609-627.
+
 }
 \author{
 Samuel D. Pimentel

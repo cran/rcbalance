@@ -16,7 +16,9 @@ This package computes sparse matches that are optimal under a set of refined cov
 
 The main function is \code{rcbalance}, which takes a distance/sparsity object containing information about matchability of the treated and control units and a list of fine balance variables and produces a match.  The \code{build.dist.struct} function can be used to construct the distance/sparsity object from covariate information.  The \code{count.pairings} function can be used to assess the sparsity of a proposed match.  The other functions are largely for internal use and should not be needed by the large majority of users.
 
-IMPORTANT NOTE: the functionality of this package is greatly enhanced if the \code{optmatch} package (v >= 0.9-1) is also loaded.  In particular, when attempting to run the \code{rcbalance} command without having loaded \code{optmatch}, the users will receive an error message.  The second reference below gives background on \code{optmatch}.
+By default the package uses the R package \code{rlemon} to solve the minimum-cost network flow optimization problems by which matches are computed. Alternatively, users may specify that the \code{rrelaxiv} package
+should be used instead. However, this package carries an academic license
+and is not available on CRAN so users must install it themselves.
 }
 \author{
 \packageAuthor{rcbalance}
@@ -24,9 +26,6 @@ IMPORTANT NOTE: the functionality of this package is greatly enhanced if the \co
 Maintainer: \packageMaintainer{rcbalance}
 }
 \references{
- Hansen, B.B. and Klopfer, S.O. (2006) Optimal full matching and
-  related designs via network flows, JCGS 15 609-627.
-
 Pimentel, S.D., Kelz, R.R., Silber, J.H., and Rosenbaum, P.R. (2015) Large, sparse optimal matching with refined covariate balance in an observational study of the health outcomes produced by new surgeons, JASA 110 (510), 515-527.
 	
 Pimentel, S.D. (2016) Large, sparse optimal matching with R package rcbalance, Obs. Studies 2, 4-23.

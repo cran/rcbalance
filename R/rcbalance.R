@@ -1,5 +1,7 @@
 rcbalance <-
-function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = NULL, control.info = NULL, exclude.treated = FALSE, target.group = NULL,  k = 1, penalty = 3, tol = 1e-5){
+function(distance.structure, near.exact = NULL, fb.list = NULL, 
+         treated.info = NULL, control.info = NULL, exclude.treated = FALSE, 
+         target.group = NULL,  k = 1, penalty = 3, tol = 1e-5, solver = 'rlemon'){
 		
 ####################  CHECK INPUT #################### 
 	if(!(k > 0)){
@@ -145,23 +147,24 @@ function(distance.structure, near.exact = NULL, fb.list = NULL, treated.info = N
 		stop('Integer overflow in penalties!  Run with a higher tolerance, a lower penalty value, or fewer levels of fine balance.')
 	}
 	match.network$cost <- cost	 	
-	o <- callrelax(match.network)	
+	o <- callrelax(match.network, solver = solver)	
 	if(o$feasible == 0){
-		stub.message <- 'Match is infeasible or penalties are too large for RELAX to process! Consider reducing penalty or raising tolerance'
-		if(k > 1){	
-			#print()
-			stop(paste(stub.message, 'or reducing k.'))
-		}
-		if(!exclude.treated){
-			#print()
-			stop(paste(stub.message, ', or setting exclude.treated = TRUE.'))
-		}
-		#print()
-		stop(paste(stub.message, '.', sep =''))
+	  stub.message <- 'Match is infeasible or penalties are too large for RELAX to process! Consider reducing penalty or raising tolerance'
+	  if(k > 1){	
+	    #print()
+	    stop(paste(stub.message, 'or reducing k.'))
+	  }
+	  if(!exclude.treated){
+	    #print()
+	    stop(paste(stub.message, ', or setting exclude.treated = TRUE.'))
+	  }
+	  #print()
+	  stop(paste(stub.message, '.', sep =''))
 	}
 	if('no.optmatch' %in% names(o)){
-		return(NULL)
+	  return(NULL)
 	}
+	
 		
 	
 	
